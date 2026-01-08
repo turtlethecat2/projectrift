@@ -1,0 +1,280 @@
+/* Project Rift - League of Legends Inspired HUD Styles */
+
+/* Root variables for consistent theming */
+:root {
+    --lol-dark-blue: #010a13;
+    --lol-gold: #785a28;
+    --lol-gold-bright: #c8aa6e;
+    --lol-cream: #f0e6d2;
+    --lol-blue-glow: #0acbe6;
+    --lol-dark-gray: #1e2328;
+    --lol-success-green: #00ff00;
+}
+
+/* Global body styling */
+body {
+    background-color: var(--lol-dark-blue);
+    color: var(--lol-cream);
+    font-family: "Beaufort", "Times New Roman", serif;
+}
+
+/* Hide Streamlit branding and unnecessary elements */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Main container */
+.main {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Gold Counter Styles */
+.gold-counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--lol-dark-gray) 0%, var(--lol-dark-blue) 100%);
+    border: 2px solid var(--lol-gold);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(200, 170, 110, 0.3);
+}
+
+.gold-icon {
+    font-size: 28px;
+}
+
+.gold-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--lol-gold-bright);
+    text-shadow: 0 0 10px rgba(200, 170, 110, 0.5);
+}
+
+.gold-label {
+    font-size: 24px;
+    color: var(--lol-gold);
+    font-weight: bold;
+}
+
+.gold-change {
+    font-size: 18px;
+    color: var(--lol-success-green);
+    font-weight: bold;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* XP Bar Styles */
+.xp-container {
+    width: 100%;
+    padding: 10px 0;
+}
+
+.xp-bar-background {
+    width: 100%;
+    height: 15px;
+    background-color: var(--lol-dark-gray);
+    border: 1px solid var(--lol-gold);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lol-gold) 0%, var(--lol-gold-bright) 50%, var(--lol-cream) 100%);
+    transition: width 0.5s ease-in-out;
+    box-shadow: 0 0 10px rgba(200, 170, 110, 0.6);
+}
+
+.xp-text {
+    text-align: center;
+    font-size: 12px;
+    color: var(--lol-cream);
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+/* Level Badge Styles */
+.level-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    background-color: var(--lol-dark-gray);
+    border: 2px solid var(--lol-gold-bright);
+    border-radius: 50px;
+    text-align: center;
+}
+
+.level-text {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--lol-cream);
+}
+
+/* Rank Badge Styles */
+.rank-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    background: var(--lol-dark-gray);
+    border: 2px solid;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.rank-text {
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* KDA Display Styles */
+.kda-container {
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    background: var(--lol-dark-gray);
+    border: 1px solid var(--lol-gold);
+    border-radius: 8px;
+}
+
+.kda-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.kda-label {
+    font-size: 11px;
+    color: var(--lol-gold);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.kda-value {
+    font-size: 20px;
+    font-family: "Courier New", monospace;
+    color: var(--lol-blue-glow);
+    font-weight: bold;
+}
+
+.kda-value-success {
+    color: var(--lol-success-green);
+}
+
+.kda-value-gold {
+    color: var(--lol-gold-bright);
+}
+
+/* Events Container Styles */
+.events-container {
+    display: flex;
+    gap: 15px;
+    padding: 10px;
+    background: rgba(30, 35, 40, 0.8);
+    border-radius: 6px;
+}
+
+.event-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.event-icon {
+    font-size: 24px;
+}
+
+.event-count {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--lol-cream);
+}
+
+.event-label {
+    font-size: 10px;
+    color: var(--lol-gold);
+    text-transform: uppercase;
+}
+
+/* Avatar Container */
+.avatar-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--lol-gold-bright);
+    box-shadow: 0 0 15px rgba(200, 170, 110, 0.5);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 10px rgba(200, 170, 110, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(200, 170, 110, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(200, 170, 110, 0.3);
+    }
+}
+
+.level-up-animation {
+    animation: pulse 1s ease-in-out 3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .gold-value {
+        font-size: 24px;
+    }
+
+    .kda-container {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .events-container {
+        gap: 10px;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--lol-dark-gray);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--lol-gold);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--lol-gold-bright);
+}

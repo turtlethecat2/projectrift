@@ -1,0 +1,94 @@
+version: 2
+
+# Source definitions
+sources:
+  - name: public
+    description: "Raw tables in the public schema"
+    database: "{{ env_var('DB_NAME') }}"
+    schema: public
+
+    tables:
+      - name: raw_events
+        description: "Raw sales activity events from webhook ingestion"
+        columns:
+          - name: id
+            description: "Unique event identifier (UUID)"
+            tests:
+              - unique
+              - not_null
+
+          - name: source
+            description: "Source of the event (outreach, nooks, manual, zapier)"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['outreach', 'nooks', 'manual', 'zapier']
+
+          - name: event_type
+            description: "Type of sales event"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['call_dial', 'call_connect', 'meeting_booked', 'meeting_attended', 'email_sent']
+
+          - name: gold_value
+            description: "Gold awarded for this event"
+            tests:
+              - not_null
+
+          - name: xp_value
+            description: "XP awarded for this event"
+            tests:
+              - not_null
+
+          - name: created_at
+            description: "Timestamp when event was created"
+            tests:
+              - not_null
+
+      - name: gamification_rules
+        description: "Rules mapping event types to gold and XP values"
+        columns:
+          - name: id
+            description: "Unique rule identifier"
+            tests:
+              - unique
+              - not_null
+
+          - name: event_type
+            description: "Event type this rule applies to"
+            tests:
+              - unique
+              - not_null
+
+# Model definitions
+models:
+  - name: stg_sales_events
+    description: "Cleaned and standardized sales events from raw_events"
+    columns:
+      - name: event_id
+        description: "Unique event identifier"
+        tests:
+          - unique
+          - not_null
+
+      - name: event_date
+        description: "Date of the event (no time component)"
+        tests:
+          - not_null
+
+      - name: source
+        description: "Event source system"
+        tests:
+          - not_null
+
+      - name: event_type
+        description: "Standardized event type"
+        tests:
+          - not_null
+
+      - name: gold_value
+        description: "Gold awarded (must be non-negative)"
+
+      - name: xp_value
+        description: "XP awarded (must be non-negative)"

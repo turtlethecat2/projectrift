@@ -1,0 +1,77 @@
+# Project Rift dbt Project Configuration
+
+name: 'sdr_rift'
+version: '1.0.0'
+config-version: 2
+
+# Project profile (references profiles.yml)
+profile: 'sdr_rift'
+
+# Directory configurations
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Documentation paths
+docs-paths: ["docs"]
+
+# Clean targets (files to remove with dbt clean)
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Model configurations
+models:
+  sdr_rift:
+    # Staging models - lightweight views for raw data cleanup
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags:
+        - "staging"
+
+    # Marts models - business logic aggregations
+    marts:
+      +materialized: table
+      +schema: analytics
+      +tags:
+        - "marts"
+        - "analytics"
+
+# Test configurations
+tests:
+  +store_failures: true
+  +schema: test_results
+
+# Seed configurations
+seeds:
+  +schema: seeds
+
+# Snapshot configurations
+snapshots:
+  +target_schema: snapshots
+  +unique_key: id
+  +strategy: timestamp
+  +updated_at: updated_at
+
+# Global variables
+vars:
+  # Number of days to keep raw events
+  raw_events_retention_days: 90
+
+  # XP required per level
+  xp_per_level: 1000
+
+  # Gold thresholds for ranks
+  rank_thresholds:
+    iron: 0
+    bronze: 200
+    silver: 500
+    gold: 1000
+    platinum: 1500
+    diamond: 3000
+    challenger: 5000

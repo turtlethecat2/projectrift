@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: fct_daily_performance
+    description: "Daily performance metrics aggregated from sales events"
+    columns:
+      - name: event_date
+        description: "Date of activity"
+        tests:
+          - unique
+          - not_null
+
+      - name: total_events
+        description: "Total number of events on this day"
+        tests:
+          - not_null
+
+      - name: total_gold
+        description: "Total gold earned on this day"
+
+      - name: total_xp
+        description: "Total XP earned on this day"
+
+      - name: current_level
+        description: "Level achieved based on cumulative XP"
+
+      - name: daily_rank
+        description: "Rank based on gold earned that day"
+
+      - name: connect_rate_pct
+        description: "Percentage of calls that connected"
+
+  - name: dim_user_stats
+    description: "Lifetime user statistics and current status"
+    columns:
+      - name: lifetime_gold
+        description: "Total gold earned all-time"
+        tests:
+          - not_null
+
+      - name: lifetime_xp
+        description: "Total XP earned all-time"
+        tests:
+          - not_null
+
+      - name: current_level
+        description: "Current player level"
+        tests:
+          - not_null
+
+      - name: xp_in_current_level
+        description: "XP progress within current level"
+
+      - name: xp_to_next_level
+        description: "XP needed to reach next level"
+
+      - name: first_activity
+        description: "Timestamp of first recorded event"
+
+      - name: last_activity
+        description: "Timestamp of most recent event"
+
+      - name: last_calculated
+        description: "When these stats were last calculated"
