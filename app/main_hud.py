@@ -73,7 +73,7 @@ def check_for_level_up(current_level: int, previous_level: int):
 def check_for_gold_earned(current_gold: int, previous_gold: int):
     """Check if gold was earned and play sound"""
     if current_gold > previous_gold:
-        play_sound("gold_earned.mp3")
+        play_sound("gold_gen.mp3")
         return True
     return False
 
@@ -81,7 +81,7 @@ def check_for_gold_earned(current_gold: int, previous_gold: int):
 def check_for_meeting_booked(current_meetings: int, previous_meetings: int):
     """Check if a meeting was booked and play sound"""
     if current_meetings > previous_meetings:
-        play_sound("meeting_booked.mp3")
+        play_sound("level_up.mp3")  # Reuse level_up sound for meeting booked
         return True
     return False
 

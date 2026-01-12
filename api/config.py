@@ -3,7 +3,8 @@ Configuration management for Project Rift API
 Loads and validates environment variables using Pydantic
 """
 
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
+from pydantic import validator
 from typing import Optional
 
 

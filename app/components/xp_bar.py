@@ -60,7 +60,7 @@ def render_level_badge(level: int) -> None:
 
 def render_rank_badge(rank: str) -> None:
     """
-    Render the rank badge with image
+    Render the rank badge with image and text
 
     Args:
         rank: Current rank (Iron, Bronze, Silver, Gold, Platinum, Emerald, Diamond, Master, Grandmaster, Challenger)
@@ -68,8 +68,16 @@ def render_rank_badge(rank: str) -> None:
     rank_image_path = Path(__file__).parent.parent / "assets" / "images" / "ranks" / f"{rank.lower()}.png"
 
     if rank_image_path.exists():
-        # Display rank image
+        # Display rank image with text underneath
         st.image(str(rank_image_path), width=100)
+        st.markdown(
+            f"""
+            <div style="text-align: center; margin-top: -10px;">
+                <span style="color: #c8aa6e; font-size: 14px; font-weight: bold;">{rank}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     else:
         # Fallback placeholder when image not found
         st.markdown(

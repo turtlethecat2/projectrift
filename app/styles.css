@@ -1,5 +1,38 @@
 /* Project Rift - League of Legends Inspired HUD Styles */
 
+/* Beaufort for LOL Font Face */
+/* Light - for labels and subtle text */
+@font-face {
+    font-family: 'Beaufort for LOL';
+    src: url('assets/fonts/BeaufortforLOL-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* Regular - for body text */
+@font-face {
+    font-family: 'Beaufort for LOL';
+    src: url('assets/fonts/BeaufortforLOL-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* Medium - for headers and emphasis */
+@font-face {
+    font-family: 'Beaufort for LOL';
+    src: url('assets/fonts/BeaufortforLOL-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* Bold - for values and strong emphasis */
+@font-face {
+    font-family: 'Beaufort for LOL';
+    src: url('assets/fonts/BeaufortforLOL-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
 /* Root variables for consistent theming */
 :root {
     --lol-dark-blue: #010a13;
@@ -15,7 +48,7 @@
 body {
     background-color: var(--lol-dark-blue);
     color: var(--lol-cream);
-    font-family: "Beaufort", "Times New Roman", serif;
+    font-family: "Beaufort for LOL", "Times New Roman", serif;
 }
 
 /* Hide Streamlit branding and unnecessary elements */

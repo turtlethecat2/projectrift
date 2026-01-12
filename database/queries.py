@@ -153,7 +153,9 @@ class DatabaseQueries:
                     COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE THEN 1 END) AS events_today,
                     SUM(CASE WHEN event_type = 'call_dial' THEN 1 ELSE 0 END) AS calls_made,
                     SUM(CASE WHEN event_type = 'call_connect' THEN 1 ELSE 0 END) AS calls_connected,
-                    SUM(CASE WHEN event_type = 'meeting_booked' THEN 1 ELSE 0 END) AS meetings_booked
+                    SUM(CASE WHEN event_type = 'meeting_booked' THEN 1 ELSE 0 END) AS meetings_booked,
+                    -- Weekly stats for rank calculation
+                    SUM(CASE WHEN created_at >= DATE_TRUNC('week', CURRENT_DATE) AND event_type = 'meeting_booked' THEN 1 ELSE 0 END) AS weekly_meetings_booked
                 FROM raw_events
             """
             cur.execute(query)
@@ -168,7 +170,8 @@ class DatabaseQueries:
             stats['current_level'] = int(total_xp / 1000) + 1
             stats['xp_in_current_level'] = total_xp % 1000
             stats['xp_to_next_level'] = 1000 - (total_xp % 1000)
-            stats['rank'] = self._calculate_rank(stats.get('meetings_booked', 0))
+            # Use weekly meetings for rank calculation
+            stats['rank'] = self._calculate_rank(stats.get('weekly_meetings_booked', 0))
 
             return stats
 

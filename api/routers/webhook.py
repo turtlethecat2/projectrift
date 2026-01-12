@@ -4,7 +4,7 @@ Handles incoming sales activity events from external sources
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from datetime import datetime
 from api.schemas import EventPayload, EventResponse
 from api.security import verify_webhook_secret, limiter, get_rate_limit_for_endpoint
@@ -35,6 +35,7 @@ router = APIRouter(
 )
 @limiter.limit(get_rate_limit_for_endpoint("webhook"))
 async def ingest_event(
+    request: Request,
     payload: EventPayload,
     _: None = Depends(verify_webhook_secret)
 ) -> EventResponse:

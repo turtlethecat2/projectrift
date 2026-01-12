@@ -5,7 +5,7 @@ Provides system status and performance metrics
 
 import logging
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from api.schemas import HealthResponse, CurrentStats
 from api.security import limiter, get_rate_limit_for_endpoint
 from api.database import check_database_health
@@ -32,7 +32,7 @@ router = APIRouter(
     description="Check the health status of the API and database"
 )
 @limiter.limit(get_rate_limit_for_endpoint("health"))
-async def health_check() -> HealthResponse:
+async def health_check(request: Request) -> HealthResponse:
     """
     Check system health
 
@@ -89,7 +89,7 @@ async def health_check() -> HealthResponse:
     description="Retrieve current session statistics and performance metrics"
 )
 @limiter.limit(get_rate_limit_for_endpoint("stats"))
-async def get_current_stats() -> CurrentStats:
+async def get_current_stats(request: Request) -> CurrentStats:
     """
     Get current session statistics
 

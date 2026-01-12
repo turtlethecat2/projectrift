@@ -47,7 +47,7 @@ start-api: ## Start only the API
 
 start-hud: ## Start only the HUD
 	@echo "$(BLUE)Starting HUD...$(NC)"
-	streamlit run app/main_hud.py
+	PYTHONPATH=. streamlit run app/main_hud.py
 
 stop: ## Stop API and HUD
 	@echo "$(BLUE)Stopping Project Rift...$(NC)"

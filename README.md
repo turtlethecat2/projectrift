@@ -141,9 +141,11 @@ curl -X POST http://localhost:8000/api/v1/webhook/ingest \
 - **1,000 XP per level**
 - Level = `(Total XP / 1000) + 1`
 
-### Rank System (Meetings-Based)
-| Rank | Meetings Required |
-|------|-------------------|
+### Rank System (Weekly Meetings-Based)
+Ranks reset every week (Monday) to create ongoing competitive cycles.
+
+| Rank | Weekly Meetings Required |
+|------|--------------------------|
 | Iron | 0 |
 | Bronze | 1 |
 | Silver | 2 |

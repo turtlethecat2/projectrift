@@ -44,30 +44,55 @@ current_level AS (
     FROM lifetime_stats
 ),
 
+weekly_stats AS (
+    SELECT
+        -- Weekly meetings for rank calculation (week starts Monday)
+        SUM(CASE
+            WHEN created_at >= DATE_TRUNC('week', CURRENT_DATE)
+            AND event_type = 'meeting_booked'
+            THEN 1
+            ELSE 0
+        END) AS weekly_meetings_booked
+
+    FROM {{ ref('stg_sales_events') }}
+),
+
 current_rank AS (
     SELECT
         CASE
-            WHEN lifetime_gold >= {{ var('rank_thresholds').challenger }} THEN 'Challenger'
-            WHEN lifetime_gold >= {{ var('rank_thresholds').diamond }} THEN 'Diamond'
-            WHEN lifetime_gold >= {{ var('rank_thresholds').platinum }} THEN 'Platinum'
-            WHEN lifetime_gold >= {{ var('rank_thresholds').gold }} THEN 'Gold'
-            WHEN lifetime_gold >= {{ var('rank_thresholds').silver }} THEN 'Silver'
-            WHEN lifetime_gold >= {{ var('rank_thresholds').bronze }} THEN 'Bronze'
+            WHEN ws.weekly_meetings_booked >= 9 THEN 'Challenger'
+            WHEN ws.weekly_meetings_booked = 8 THEN 'Grandmaster'
+            WHEN ws.weekly_meetings_booked = 7 THEN 'Master'
+            WHEN ws.weekly_meetings_booked = 6 THEN 'Diamond'
+            WHEN ws.weekly_meetings_booked = 5 THEN 'Emerald'
+            WHEN ws.weekly_meetings_booked = 4 THEN 'Platinum'
+            WHEN ws.weekly_meetings_booked = 3 THEN 'Gold'
+            WHEN ws.weekly_meetings_booked = 2 THEN 'Silver'
+            WHEN ws.weekly_meetings_booked = 1 THEN 'Bronze'
             ELSE 'Iron'
         END AS rank,
 
-        -- Calculate gold needed for next rank
+        -- Calculate meetings needed for next rank
         CASE
-            WHEN lifetime_gold < {{ var('rank_thresholds').bronze }} THEN {{ var('rank_thresholds').bronze }} - lifetime_gold
-            WHEN lifetime_gold < {{ var('rank_thresholds').silver }} THEN {{ var('rank_thresholds').silver }} - lifetime_gold
-            WHEN lifetime_gold < {{ var('rank_thresholds').gold }} THEN {{ var('rank_thresholds').gold }} - lifetime_gold
-            WHEN lifetime_gold < {{ var('rank_thresholds').platinum }} THEN {{ var('rank_thresholds').platinum }} - lifetime_gold
-            WHEN lifetime_gold < {{ var('rank_thresholds').diamond }} THEN {{ var('rank_thresholds').diamond }} - lifetime_gold
-            WHEN lifetime_gold < {{ var('rank_thresholds').challenger }} THEN {{ var('rank_thresholds').challenger }} - lifetime_gold
-            ELSE 0
-        END AS gold_to_next_rank
+            WHEN ws.weekly_meetings_booked >= 9 THEN 0
+            ELSE (
+                CASE
+                    WHEN ws.weekly_meetings_booked < 1 THEN 1 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 2 THEN 2 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 3 THEN 3 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 4 THEN 4 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 5 THEN 5 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 6 THEN 6 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 7 THEN 7 - ws.weekly_meetings_booked
+                    WHEN ws.weekly_meetings_booked < 8 THEN 8 - ws.weekly_meetings_booked
+                    ELSE 9 - ws.weekly_meetings_booked
+                END
+            )
+        END AS meetings_to_next_rank,
 
-    FROM lifetime_stats
+        ws.weekly_meetings_booked
+
+    FROM weekly_stats ws
 ),
 
 performance_metrics AS (
@@ -110,7 +135,8 @@ SELECT
     cl.xp_in_current_level,
     cl.xp_to_next_level,
     cr.rank AS current_rank,
-    cr.gold_to_next_rank,
+    cr.meetings_to_next_rank,
+    cr.weekly_meetings_booked,
     pm.lifetime_connect_rate_pct,
     pm.lifetime_booking_rate_pct,
     pm.avg_events_per_day,
