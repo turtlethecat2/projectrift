@@ -37,7 +37,7 @@ start: ## Start API and HUD (in background)
 	@nohup uvicorn api.main:app --reload --host $(API_HOST) --port $(API_PORT) > logs/api.log 2>&1 &
 	@echo "API started on http://$(API_HOST):$(API_PORT)"
 	@sleep 2
-	@nohup streamlit run app/main_hud.py > logs/hud.log 2>&1 &
+	@PYTHONPATH=. nohup streamlit run app/main_hud.py > logs/hud.log 2>&1 &
 	@echo "HUD started on http://localhost:8501"
 	@echo "$(GREEN)✓ Project Rift is running$(NC)"
 

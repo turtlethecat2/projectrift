@@ -3,21 +3,22 @@
 Detailed database profiling to distinguish connection vs query time.
 """
 
-import time
 import os
-from pathlib import Path
 import sys
+import time
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-connection_string = os.getenv('DATABASE_URL')
+connection_string = os.getenv("DATABASE_URL")
 print(f"DATABASE_URL: {connection_string[:30]}..." if connection_string else "NOT SET")
 print()
 
@@ -54,7 +55,7 @@ print(f"  Result: {dict(result)}")
 # Test 3: Row count in raw_events
 print("\nTest 3: Table size")
 cur.execute("SELECT COUNT(*) FROM raw_events")
-count = cur.fetchone()['count']
+count = cur.fetchone()["count"]
 print(f"  raw_events rows: {count}")
 
 # Test 4: Second query (connection warm)
@@ -80,16 +81,18 @@ conn2.close()
 total_time = (time.perf_counter() - start) * 1000
 print(f"  Total time: {total_time:.2f}ms")
 
-print("\n" + "="*50)
+print("\n" + "=" * 50)
 print("ANALYSIS")
-print("="*50)
+print("=" * 50)
 print(f"Connection overhead: {conn_time:.0f}ms")
 print(f"Query execution: {query_time:.0f}ms")
 print(f"Combined (fresh): {total_time:.0f}ms")
 print()
 print("RECOMMENDATION:")
 if conn_time > 100:
-    print("- Connection is slow - use connection pooling or @st.cache_resource for connection")
+    print(
+        "- Connection is slow - use connection pooling or @st.cache_resource for connection"
+    )
 if query_time > 50:
     print("- Query is slow - add index or optimize query")
     print("- Consider @st.cache_data with short TTL for stats")

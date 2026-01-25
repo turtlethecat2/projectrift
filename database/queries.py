@@ -4,11 +4,12 @@ Provides Python wrappers for common SQL operations
 """
 
 import os
-from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import psycopg2
-from psycopg2.extras import RealDictCursor, Json
 from dotenv import load_dotenv
+from psycopg2.extras import Json, RealDictCursor
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ class DatabaseQueries:
         Args:
             connection_string: PostgreSQL connection string (uses env var if not provided)
         """
-        self.connection_string = connection_string or os.getenv('DATABASE_URL')
+        self.connection_string = connection_string or os.getenv("DATABASE_URL")
         if not self.connection_string:
             raise ValueError("DATABASE_URL not found in environment variables")
 
@@ -37,7 +38,7 @@ class DatabaseQueries:
         event_type: str,
         gold_value: int,
         xp_value: int,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ) -> str:
         """
         Insert a new event into raw_events table
@@ -61,12 +62,16 @@ class DatabaseQueries:
                 VALUES (%s, %s, %s, %s, %s)
                 RETURNING id
             """
-            cur.execute(query, (source, event_type, gold_value, xp_value, Json(metadata or {})))
+            cur.execute(
+                query, (source, event_type, gold_value, xp_value, Json(metadata or {}))
+            )
             event_id = cur.fetchone()[0]
             conn.commit()
 
             # Log the creation
-            self.log_event_action(event_id, 'created', {'source': source, 'event_type': event_type})
+            self.log_event_action(
+                event_id, "created", {"source": source, "event_type": event_type}
+            )
 
             return str(event_id)
 
@@ -78,10 +83,7 @@ class DatabaseQueries:
             conn.close()
 
     def log_event_action(
-        self,
-        event_id: str,
-        action: str,
-        details: Dict[str, Any] = None
+        self, event_id: str, action: str, details: Dict[str, Any] = None
     ) -> None:
         """
         Log an action to the event_log table
@@ -164,14 +166,14 @@ class DatabaseQueries:
             stats = dict(result) if result else {}
 
             # Calculate level and rank
-            total_xp = stats.get('total_xp', 0)
-            total_gold = stats.get('total_gold', 0)
+            total_xp = stats.get("total_xp", 0)
+            total_gold = stats.get("total_gold", 0)
 
-            stats['current_level'] = int(total_xp / 1000) + 1
-            stats['xp_in_current_level'] = total_xp % 1000
-            stats['xp_to_next_level'] = 1000 - (total_xp % 1000)
+            stats["current_level"] = int(total_xp / 1000) + 1
+            stats["xp_in_current_level"] = total_xp % 1000
+            stats["xp_to_next_level"] = 1000 - (total_xp % 1000)
             # Use weekly meetings for rank calculation
-            stats['rank'] = self._calculate_rank(stats.get('weekly_meetings_booked', 0))
+            stats["rank"] = self._calculate_rank(stats.get("weekly_meetings_booked", 0))
 
             return stats
 
@@ -248,11 +250,7 @@ class DatabaseQueries:
             conn.close()
 
     def check_duplicate_event(
-        self,
-        source: str,
-        event_type: str,
-        metadata: Dict[str, Any],
-        minutes: int = 5
+        self, source: str, event_type: str, metadata: Dict[str, Any], minutes: int = 5
     ) -> bool:
         """
         Check if a duplicate event exists within the specified time window
@@ -298,22 +296,22 @@ class DatabaseQueries:
         """
         # Exact meeting count to rank mapping
         rank_map = {
-            0: 'Iron',
-            1: 'Bronze',
-            2: 'Silver',
-            3: 'Gold',
-            4: 'Platinum',
-            5: 'Emerald',
-            6: 'Diamond',
-            7: 'Master',
-            8: 'Grandmaster'
+            0: "Iron",
+            1: "Bronze",
+            2: "Silver",
+            3: "Gold",
+            4: "Platinum",
+            5: "Emerald",
+            6: "Diamond",
+            7: "Master",
+            8: "Grandmaster",
         }
 
         # 9 or more meetings = Challenger
         if meetings_booked >= 9:
-            return 'Challenger'
+            return "Challenger"
 
-        return rank_map.get(meetings_booked, 'Iron')
+        return rank_map.get(meetings_booked, "Iron")
 
 
 # Convenience function for getting a database instance

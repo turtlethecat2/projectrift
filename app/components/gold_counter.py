@@ -5,6 +5,8 @@ Displays total gold earned with League of Legends styling
 
 import streamlit as st
 
+from app.components.template_loader import load_template
+
 
 def render_gold_counter(gold: int) -> None:
     """
@@ -13,20 +15,9 @@ def render_gold_counter(gold: int) -> None:
     Args:
         gold: Total gold amount
     """
-    # Format gold with comma separators
     formatted_gold = f"{gold:,}"
-
-    # Render gold counter with custom HTML for styling
-    st.markdown(
-        f"""
-        <div class="gold-counter">
-            <span class="gold-icon">💰</span>
-            <span class="gold-value">{formatted_gold}</span>
-            <span class="gold-label">G</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    html = load_template("gold_counter.html", gold=formatted_gold)
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_gold_counter_with_change(gold: int, previous_gold: int) -> None:
@@ -44,14 +35,7 @@ def render_gold_counter_with_change(gold: int, previous_gold: int) -> None:
     if gold_change > 0:
         change_html = f'<span class="gold-change">+{gold_change}</span>'
 
-    st.markdown(
-        f"""
-        <div class="gold-counter">
-            <span class="gold-icon">💰</span>
-            <span class="gold-value">{formatted_gold}</span>
-            <span class="gold-label">G</span>
-            {change_html}
-        </div>
-        """,
-        unsafe_allow_html=True
+    html = load_template(
+        "gold_counter_with_change.html", gold=formatted_gold, change_html=change_html
     )
+    st.markdown(html, unsafe_allow_html=True)

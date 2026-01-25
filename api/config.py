@@ -3,9 +3,10 @@ Configuration management for Project Rift API
 Loads and validates environment variables using Pydantic
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import validator
 from typing import Optional
+
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -44,36 +45,39 @@ class Settings(BaseSettings):
     OUTREACH_API_KEY: Optional[str] = None
     NOOKS_API_KEY: Optional[str] = None
 
-    @validator('WEBHOOK_SECRET')
+    @validator("WEBHOOK_SECRET")
     def validate_secret_length(cls, v):
         """Ensure webhook secret is at least 32 characters"""
         if len(v) < 32:
-            raise ValueError('WEBHOOK_SECRET must be at least 32 characters for security')
+            raise ValueError(
+                "WEBHOOK_SECRET must be at least 32 characters for security"
+            )
         return v
 
-    @validator('SOUND_VOLUME', 'HUD_OPACITY')
+    @validator("SOUND_VOLUME", "HUD_OPACITY")
     def validate_percentage(cls, v):
         """Ensure values are between 0.0 and 1.0"""
         if not 0.0 <= v <= 1.0:
-            raise ValueError('Value must be between 0.0 and 1.0')
+            raise ValueError("Value must be between 0.0 and 1.0")
         return v
 
-    @validator('HUD_REFRESH_INTERVAL')
+    @validator("HUD_REFRESH_INTERVAL")
     def validate_refresh_interval(cls, v):
         """Ensure refresh interval is at least 1 second"""
         if v < 1:
-            raise ValueError('HUD_REFRESH_INTERVAL must be at least 1 second')
+            raise ValueError("HUD_REFRESH_INTERVAL must be at least 1 second")
         return v
 
-    @validator('RATE_LIMIT_PER_MINUTE')
+    @validator("RATE_LIMIT_PER_MINUTE")
     def validate_rate_limit(cls, v):
         """Ensure rate limit is positive"""
         if v <= 0:
-            raise ValueError('RATE_LIMIT_PER_MINUTE must be positive')
+            raise ValueError("RATE_LIMIT_PER_MINUTE must be positive")
         return v
 
     class Config:
         """Pydantic configuration"""
+
         env_file = ".env"
         case_sensitive = True
 

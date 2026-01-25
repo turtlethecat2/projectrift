@@ -5,8 +5,9 @@ Tests FastAPI routes, authentication, and error handling
 
 import pytest
 from fastapi.testclient import TestClient
-from api.main import app
+
 from api.config import settings
+from api.main import app
 
 client = TestClient(app)
 
@@ -59,7 +60,7 @@ class TestWebhookAuthentication:
         """Test that webhook endpoint rejects requests without secret"""
         response = client.post(
             "/api/v1/webhook/ingest",
-            json={"source": "nooks", "event_type": "call_dial"}
+            json={"source": "nooks", "event_type": "call_dial"},
         )
         assert response.status_code == 422  # Missing required header
 
@@ -68,7 +69,7 @@ class TestWebhookAuthentication:
         response = client.post(
             "/api/v1/webhook/ingest",
             headers={"X-RIFT-SECRET": "invalid-secret-12345678901234567890"},
-            json={"source": "nooks", "event_type": "call_dial"}
+            json={"source": "nooks", "event_type": "call_dial"},
         )
         assert response.status_code == 401
         assert "Invalid webhook secret" in response.json()["detail"]
@@ -82,7 +83,7 @@ class TestWebhookValidation:
         response = client.post(
             "/api/v1/webhook/ingest",
             headers={"X-RIFT-SECRET": settings.WEBHOOK_SECRET},
-            json={"source": "invalid_source", "event_type": "call_dial"}
+            json={"source": "invalid_source", "event_type": "call_dial"},
         )
         assert response.status_code == 422
 
@@ -91,7 +92,7 @@ class TestWebhookValidation:
         response = client.post(
             "/api/v1/webhook/ingest",
             headers={"X-RIFT-SECRET": settings.WEBHOOK_SECRET},
-            json={"source": "nooks", "event_type": "invalid_type"}
+            json={"source": "nooks", "event_type": "invalid_type"},
         )
         assert response.status_code == 422
         data = response.json()
@@ -102,7 +103,7 @@ class TestWebhookValidation:
         response = client.post(
             "/api/v1/webhook/ingest",
             headers={"X-RIFT-SECRET": settings.WEBHOOK_SECRET},
-            json={"source": "nooks"}  # Missing event_type
+            json={"source": "nooks"},  # Missing event_type
         )
         assert response.status_code == 422
 
@@ -115,8 +116,8 @@ class TestWebhookValidation:
             json={
                 "source": "nooks",
                 "event_type": "call_dial",
-                "metadata": large_metadata
-            }
+                "metadata": large_metadata,
+            },
         )
         assert response.status_code == 422
 
@@ -132,8 +133,8 @@ class TestWebhookSuccess:
             json={
                 "source": "nooks",
                 "event_type": "call_connect",
-                "metadata": {"prospect": "Test Corp"}
-            }
+                "metadata": {"prospect": "Test Corp"},
+            },
         )
         # Note: This will fail if database is not available
         # In a real test environment, you'd mock the database
@@ -144,11 +145,7 @@ class TestWebhookSuccess:
         response = client.post(
             "/api/v1/webhook/ingest",
             headers={"X-RIFT-SECRET": settings.WEBHOOK_SECRET},
-            json={
-                "source": "manual",
-                "event_type": "call_dial",
-                "metadata": {}
-            }
+            json={"source": "manual", "event_type": "call_dial", "metadata": {}},
         )
         if response.status_code == 201:
             data = response.json()

@@ -4,24 +4,27 @@ Handles authentication and rate limiting
 """
 
 import secrets
+
 from fastapi import Header, HTTPException, Request
 from fastapi.security import HTTPBearer
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from api.config import settings
 
+from api.config import settings
 
 # Initialize rate limiter
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"]
+    default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"],
 )
 
 # HTTP Bearer for potential future token auth
 security = HTTPBearer(auto_error=False)
 
 
-async def verify_webhook_secret(x_rift_secret: str = Header(..., alias="X-RIFT-SECRET")) -> None:
+async def verify_webhook_secret(
+    x_rift_secret: str = Header(..., alias="X-RIFT-SECRET")
+) -> None:
     """
     Verify the webhook secret header matches the configured secret
 
@@ -36,7 +39,7 @@ async def verify_webhook_secret(x_rift_secret: str = Header(..., alias="X-RIFT-S
         raise HTTPException(
             status_code=401,
             detail="Invalid webhook secret",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
@@ -86,7 +89,7 @@ def get_rate_limit_key(request: Request) -> str:
 RATE_LIMITS = {
     "webhook": f"{settings.RATE_LIMIT_PER_MINUTE}/minute",
     "health": "100/minute",
-    "stats": "120/minute"
+    "stats": "120/minute",
 }
 
 

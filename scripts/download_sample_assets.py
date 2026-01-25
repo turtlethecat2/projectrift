@@ -5,8 +5,9 @@ Downloads free placeholder assets that match the LoL aesthetic
 """
 
 import os
-import requests
 from pathlib import Path
+
+import requests
 
 # Base directories
 ASSETS_DIR = Path(__file__).parent.parent / "app" / "assets"
@@ -23,7 +24,7 @@ SAMPLE_ASSETS = {
         {
             "name": "gold_icon.png",
             "url": "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/originals/svg/gold-bar.svg",
-            "description": "Gold coin icon (SVG - convert to PNG)"
+            "description": "Gold coin icon (SVG - convert to PNG)",
         },
     ],
     "sounds": [
@@ -31,37 +32,39 @@ SAMPLE_ASSETS = {
         {
             "name": "level_up.mp3",
             "url": None,
-            "description": "Download from: https://freesound.org/search/?q=level+up&f=tag:game"
+            "description": "Download from: https://freesound.org/search/?q=level+up&f=tag:game",
         },
         {
             "name": "gold_earned.mp3",
             "url": None,
-            "description": "Download from: https://freesound.org/search/?q=coin&f=tag:game"
+            "description": "Download from: https://freesound.org/search/?q=coin&f=tag:game",
         },
         {
             "name": "meeting_booked.mp3",
             "url": None,
-            "description": "Download from: https://freesound.org/search/?q=achievement&f=tag:game"
-        }
-    ]
+            "description": "Download from: https://freesound.org/search/?q=achievement&f=tag:game",
+        },
+    ],
 }
+
 
 def download_file(url, destination):
     """Download a file from URL to destination"""
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        with open(destination, 'wb') as f:
+        with open(destination, "wb") as f:
             f.write(response.content)
         return True
     except Exception as e:
         print(f"Error downloading: {e}")
         return False
 
+
 def main():
-    print("="*60)
+    print("=" * 60)
     print("Project Rift - Asset Setup Guide")
-    print("="*60)
+    print("=" * 60)
     print("\nThis script helps you set up visual and audio assets.\n")
 
     print("📁 Asset Directories:")
@@ -72,7 +75,7 @@ def main():
     print("🎨 RECOMMENDED ASSET SOURCES:\n")
 
     print("1. IMAGES (Gold Icon, Badges, etc.)")
-    print("   " + "-"*55)
+    print("   " + "-" * 55)
     print("   • Game-Icons.net - Free gaming icons")
     print("     https://game-icons.net/")
     print("     Search: 'gold', 'level', 'rank'")
@@ -87,7 +90,7 @@ def main():
     print()
 
     print("2. SOUNDS (Level Up, Coins, Achievements)")
-    print("   " + "-"*55)
+    print("   " + "-" * 55)
     print("   • Freesound.org - Free sound effects (CC0)")
     print("     https://freesound.org/")
     print("     Searches:")
@@ -103,7 +106,7 @@ def main():
     print()
 
     print("3. LEAGUE OF LEGENDS STYLE GUIDE")
-    print("   " + "-"*55)
+    print("   " + "-" * 55)
     print("   Colors (already in styles.css):")
     print("     • Dark Blue: #010a13")
     print("     • Gold: #785a28")
@@ -115,9 +118,9 @@ def main():
     print("     • Download: https://na.leagueoflegends.com/en-us/news/dev/")
     print()
 
-    print("="*60)
+    print("=" * 60)
     print("QUICK START:")
-    print("="*60)
+    print("=" * 60)
     print()
     print("Step 1: Download Assets")
     print("   Visit the sites above and download:")
@@ -133,7 +136,7 @@ def main():
     print("   Run: streamlit run app/main_hud.py")
     print("   The HUD should show your assets!")
     print()
-    print("="*60)
+    print("=" * 60)
 
     # Check current assets
     print("\n📊 CURRENT ASSETS STATUS:\n")
@@ -152,10 +155,11 @@ def main():
         status = "✅ Found" if exists else "❌ Missing"
         print(f"   {status}: {sound}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TIP: For a quick test, you can use emoji placeholders")
     print("     The HUD will work without assets, just less fancy!")
-    print("="*60)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

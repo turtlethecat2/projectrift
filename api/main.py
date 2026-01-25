@@ -5,6 +5,7 @@ FastAPI application for SDR gamification engine
 
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,14 +14,14 @@ from slowapi.errors import RateLimitExceeded
 
 from api import __version__
 from api.config import settings
-from api.security import limiter
 from api.database import cleanup_database_connections
-from api.routers import webhook, health
+from api.routers import health, webhook
+from api.security import limiter
 
 # Configure logging
 logging.basicConfig(
     level=settings.LOG_LEVEL,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
     docs_url="/docs" if settings.ENVIRONMENT == "development" else None,
-    redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None
+    redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None,
 )
 
 # Add rate limiter state
@@ -71,7 +72,9 @@ app.add_middleware(
         "http://localhost",
         "http://localhost:8000",
         "http://localhost:8501",  # Streamlit default port
-    ] if settings.ENVIRONMENT == "development" else [],
+    ]
+    if settings.ENVIRONMENT == "development"
+    else [],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-RIFT-SECRET", "X-API-KEY"],
@@ -97,8 +100,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={
             "detail": "Internal server error",
             "error_type": type(exc).__name__,
-            "path": str(request.url)
-        }
+            "path": str(request.url),
+        },
     )
 
 
@@ -109,10 +112,7 @@ app.include_router(health.router)
 
 # Root endpoint
 @app.get(
-    "/",
-    tags=["root"],
-    summary="API root",
-    description="Get basic API information"
+    "/", tags=["root"], summary="API root", description="Get basic API information"
 )
 async def root():
     """
@@ -129,8 +129,8 @@ async def root():
         "health": "/api/v1/health",
         "endpoints": {
             "webhook_ingest": "/api/v1/webhook/ingest",
-            "current_stats": "/api/v1/stats/current"
-        }
+            "current_stats": "/api/v1/stats/current",
+        },
     }
 
 
@@ -161,5 +161,5 @@ if __name__ == "__main__":
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.ENVIRONMENT == "development",
-        log_level=settings.LOG_LEVEL.lower()
+        log_level=settings.LOG_LEVEL.lower(),
     )

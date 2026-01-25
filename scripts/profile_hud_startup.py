@@ -14,9 +14,9 @@ Output:
     - Recommendations based on measured times
 """
 
+import sys
 import time
 from pathlib import Path
-import sys
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -38,6 +38,7 @@ def time_operation(name: str, func):
 def profile_pygame_mixer():
     """Profile pygame mixer initialization"""
     import pygame
+
     pygame.mixer.init()
 
 
@@ -62,6 +63,7 @@ def profile_font_check():
 def profile_db_query():
     """Profile database connection and get_current_stats query"""
     from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     return db.get_current_stats()
 
@@ -72,7 +74,7 @@ def profile_rank_images():
     loaded = []
     if images_dir.exists():
         for img in images_dir.glob("*.png"):
-            with open(img, 'rb') as f:
+            with open(img, "rb") as f:
                 loaded.append(len(f.read()))
     return loaded
 
@@ -80,6 +82,7 @@ def profile_rank_images():
 def profile_sound_files():
     """Profile sound file loading via pygame"""
     import pygame
+
     if not pygame.mixer.get_init():
         pygame.mixer.init()
 
@@ -95,6 +98,7 @@ def profile_sound_files():
 def profile_dotenv():
     """Profile dotenv loading"""
     from dotenv import load_dotenv
+
     load_dotenv()
 
 

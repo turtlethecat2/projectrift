@@ -6,9 +6,11 @@ Handles connection pooling and session management
 import logging
 from contextlib import contextmanager
 from typing import Generator
+
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
+
 from api.config import settings
 
 # Configure logging
@@ -39,7 +41,7 @@ class DatabaseConnectionPool:
                 self.min_connections,
                 self.max_connections,
                 settings.DATABASE_URL,
-                cursor_factory=RealDictCursor
+                cursor_factory=RealDictCursor,
             )
             logger.info(
                 f"Database connection pool initialized "

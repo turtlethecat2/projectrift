@@ -3,9 +3,10 @@ Pydantic schemas for request/response validation
 Ensures type safety and data validation for API endpoints
 """
 
-from pydantic import BaseModel, Field, validator
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class EventPayload(BaseModel):
@@ -14,32 +15,27 @@ class EventPayload(BaseModel):
     source: str = Field(
         ...,
         description="Source of the event",
-        pattern="^(outreach|nooks|manual|zapier)$"
+        pattern="^(outreach|nooks|manual|zapier)$",
     )
     event_type: str = Field(
-        ...,
-        description="Type of sales event",
-        min_length=1,
-        max_length=50
+        ..., description="Type of sales event", min_length=1, max_length=50
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict,
-        description="Additional event metadata"
+        default_factory=dict, description="Additional event metadata"
     )
     timestamp: Optional[datetime] = Field(
-        default=None,
-        description="Event timestamp (defaults to now if not provided)"
+        default=None, description="Event timestamp (defaults to now if not provided)"
     )
 
-    @validator('event_type')
+    @validator("event_type")
     def validate_event_type(cls, v):
         """Ensure event type is one of the allowed values"""
         allowed_types = [
-            'call_dial',
-            'call_connect',
-            'meeting_booked',
-            'meeting_attended',
-            'email_sent'
+            "call_dial",
+            "call_connect",
+            "meeting_booked",
+            "meeting_attended",
+            "email_sent",
         ]
         if v not in allowed_types:
             raise ValueError(
@@ -47,15 +43,16 @@ class EventPayload(BaseModel):
             )
         return v
 
-    @validator('metadata')
+    @validator("metadata")
     def validate_metadata_size(cls, v):
         """Limit metadata size to prevent abuse"""
         if len(str(v)) > 5000:
-            raise ValueError('Metadata too large (max 5000 characters)')
+            raise ValueError("Metadata too large (max 5000 characters)")
         return v
 
     class Config:
         """Pydantic configuration"""
+
         schema_extra = {
             "example": {
                 "source": "nooks",
@@ -63,8 +60,8 @@ class EventPayload(BaseModel):
                 "metadata": {
                     "prospect_name": "John Doe",
                     "company": "Acme Corp",
-                    "call_duration": 180
-                }
+                    "call_duration": 180,
+                },
             }
         }
 
@@ -77,10 +74,13 @@ class EventResponse(BaseModel):
     gold_earned: int = Field(..., description="Gold awarded for this event")
     xp_earned: int = Field(..., description="XP awarded for this event")
     message: str = Field(default="Event processed successfully")
-    duplicate: bool = Field(default=False, description="Whether this was a duplicate event")
+    duplicate: bool = Field(
+        default=False, description="Whether this was a duplicate event"
+    )
 
     class Config:
         """Pydantic configuration"""
+
         schema_extra = {
             "example": {
                 "status": "success",
@@ -88,7 +88,7 @@ class EventResponse(BaseModel):
                 "gold_earned": 100,
                 "xp_earned": 40,
                 "message": "Event processed successfully",
-                "duplicate": False
+                "duplicate": False,
             }
         }
 
@@ -103,12 +103,13 @@ class HealthResponse(BaseModel):
 
     class Config:
         """Pydantic configuration"""
+
         schema_extra = {
             "example": {
                 "status": "healthy",
                 "database": "connected",
                 "timestamp": "2026-01-04T12:00:00Z",
-                "version": "1.0.0"
+                "version": "1.0.0",
             }
         }
 
@@ -130,6 +131,7 @@ class CurrentStats(BaseModel):
 
     class Config:
         """Pydantic configuration"""
+
         schema_extra = {
             "example": {
                 "total_gold": 2450,
@@ -142,7 +144,7 @@ class CurrentStats(BaseModel):
                 "rank": "Gold",
                 "calls_made": 12,
                 "calls_connected": 4,
-                "meetings_booked": 1
+                "meetings_booked": 1,
             }
         }
 
@@ -152,14 +154,17 @@ class ErrorResponse(BaseModel):
 
     detail: str = Field(..., description="Error message")
     error_code: Optional[str] = Field(None, description="Machine-readable error code")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Error timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Error timestamp"
+    )
 
     class Config:
         """Pydantic configuration"""
+
         schema_extra = {
             "example": {
                 "detail": "Invalid webhook secret",
                 "error_code": "UNAUTHORIZED",
-                "timestamp": "2026-01-04T12:00:00Z"
+                "timestamp": "2026-01-04T12:00:00Z",
             }
         }
