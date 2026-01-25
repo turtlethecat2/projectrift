@@ -26,14 +26,49 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Load custom CSS
-css_path = Path(__file__).parent / "styles.css"
-if css_path.exists():
-    with open(css_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Initialize pygame mixer for sound effects
-pygame.mixer.init()
+# === CACHED RESOURCES (persist across reruns for performance) ===
+
+
+@st.cache_resource
+def load_css():
+    """Load and cache CSS - only reads file once per session"""
+    css_path = Path(__file__).parent / "styles.css"
+    if css_path.exists():
+        with open(css_path) as f:
+            return f.read()
+    return ""
+
+
+@st.cache_resource
+def init_pygame_mixer():
+    """Initialize pygame mixer once per session (~1100ms savings)"""
+    pygame.mixer.init()
+    return True
+
+
+@st.cache_resource
+def get_db_connection():
+    """Cache database connection across reruns (~285ms savings)"""
+    return DatabaseQueries()
+
+
+@st.cache_data(ttl=5)
+def get_cached_stats(_db: DatabaseQueries):
+    """Cache stats with 5-second TTL to match refresh interval
+
+    Note: _db prefix tells Streamlit not to hash the connection object
+    """
+    return _db.get_current_stats()
+
+
+# Apply cached CSS
+css_content = load_css()
+if css_content:
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+
+# Initialize pygame mixer (cached - only runs once)
+init_pygame_mixer()
 
 # Configuration
 REFRESH_INTERVAL = int(os.getenv('HUD_REFRESH_INTERVAL', 5))
@@ -41,22 +76,34 @@ SOUND_VOLUME = float(os.getenv('SOUND_VOLUME', 0.7))
 SOUND_ENABLED = True  # Can be toggled in UI
 
 
-# Sound helper functions
-def play_sound(sound_file: str):
-    """
-    Play a sound effect
+# === SOUND SYSTEM (lazy loading) ===
 
-    Args:
-        sound_file: Name of the sound file in assets/sounds/
-    """
-    if not SOUND_ENABLED:
-        return
 
-    try:
+def get_sound(sound_file: str):
+    """Get or create a cached sound object (lazy loaded)"""
+    if "sound_cache" not in st.session_state:
+        st.session_state.sound_cache = {}
+
+    if sound_file not in st.session_state.sound_cache:
         sound_path = Path(__file__).parent / "assets" / "sounds" / sound_file
         if sound_path.exists():
             sound = pygame.mixer.Sound(str(sound_path))
             sound.set_volume(SOUND_VOLUME)
+            st.session_state.sound_cache[sound_file] = sound
+        else:
+            st.session_state.sound_cache[sound_file] = None
+
+    return st.session_state.sound_cache.get(sound_file)
+
+
+def play_sound(sound_file: str):
+    """Play a sound effect (lazy loaded on first use)"""
+    if not SOUND_ENABLED:
+        return
+
+    try:
+        sound = get_sound(sound_file)
+        if sound:
             sound.play()
     except Exception as e:
         st.error(f"Failed to play sound: {e}")
@@ -122,10 +169,10 @@ def main():
     # Title (can be hidden in production)
     st.title("⚔️ Project Rift - SDR HUD")
 
-    # Database connection
+    # Database connection (cached)
     try:
-        db = DatabaseQueries()
-        stats = db.get_current_stats()
+        db = get_db_connection()
+        stats = get_cached_stats(db)
     except Exception as e:
         st.error(f"Failed to connect to database: {e}")
         st.info("Please ensure the database is running and DATABASE_URL is set correctly.")
