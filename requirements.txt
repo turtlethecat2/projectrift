@@ -11,6 +11,7 @@ sqlalchemy>=2.0.35
 # API Features
 slowapi>=0.1.9
 python-multipart>=0.0.12
+apscheduler>=3.10.0,<4.0
 
 # Frontend
 streamlit>=1.39.0
