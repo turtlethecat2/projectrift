@@ -296,5 +296,50 @@ class TestOutreachSchemas:
         assert s.authorized is True
 
 
+class TestOutreachClient:
+    """Unit tests for outreach_client token management"""
+
+    def test_needs_refresh_when_expiring_soon(self):
+        """needs_refresh returns True when token expires within buffer window"""
+        from api.outreach_client import needs_refresh
+        from datetime import datetime, timezone, timedelta
+        tokens = {"expires_at": datetime.now(timezone.utc) + timedelta(minutes=5)}
+        assert needs_refresh(tokens, buffer_minutes=10) is True
+
+    def test_needs_refresh_when_not_expiring(self):
+        """needs_refresh returns False when token has plenty of time left"""
+        from api.outreach_client import needs_refresh
+        from datetime import datetime, timezone, timedelta
+        tokens = {"expires_at": datetime.now(timezone.utc) + timedelta(hours=1)}
+        assert needs_refresh(tokens, buffer_minutes=10) is False
+
+    def test_map_calls_to_events_unanswered(self):
+        """Unanswered call produces only call_dial event"""
+        from api.outreach_client import map_calls_to_events
+        calls = [{"id": "c1", "attributes": {"answeredAt": None, "createdAt": "2026-02-22T10:00:00Z"}}]
+        events = map_calls_to_events(calls)
+        assert len(events) == 1
+        assert events[0]["event_type"] == "call_dial"
+
+    def test_map_calls_to_events_answered(self):
+        """Answered call produces call_dial AND call_connect events"""
+        from api.outreach_client import map_calls_to_events
+        calls = [{"id": "c2", "attributes": {"answeredAt": "2026-02-22T10:01:00Z", "createdAt": "2026-02-22T10:00:00Z"}}]
+        events = map_calls_to_events(calls)
+        assert len(events) == 2
+        types = {e["event_type"] for e in events}
+        assert "call_dial" in types
+        assert "call_connect" in types
+
+    def test_map_meetings_to_events(self):
+        """Meeting record produces meeting_booked event"""
+        from api.outreach_client import map_meetings_to_events
+        meetings = [{"id": "m1", "attributes": {"createdAt": "2026-02-22T14:00:00Z"}}]
+        events = map_meetings_to_events(meetings)
+        assert len(events) == 1
+        assert events[0]["event_type"] == "meeting_booked"
+        assert events[0]["source"] == "outreach"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
