@@ -252,5 +252,18 @@ class TestOAuthTokensTable:
         assert result is not None
 
 
+class TestOutreachConfig:
+    """Verify Outreach OAuth config fields exist"""
+
+    def test_outreach_config_fields_exist(self):
+        """Settings must have Outreach OAuth fields"""
+        from api.config import settings
+        assert hasattr(settings, "OUTREACH_CLIENT_ID")
+        assert hasattr(settings, "OUTREACH_CLIENT_SECRET")
+        assert hasattr(settings, "OUTREACH_REDIRECT_URI")
+        assert hasattr(settings, "OUTREACH_POLL_INTERVAL_MINUTES")
+        assert settings.OUTREACH_POLL_INTERVAL_MINUTES == 15  # default
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

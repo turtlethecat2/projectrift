@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     OUTREACH_CLIENT_ID: Optional[str] = None
     OUTREACH_CLIENT_SECRET: Optional[str] = None
     OUTREACH_REDIRECT_URI: Optional[str] = None
-    OUTREACH_POLL_INTERVAL: int = 15
+    OUTREACH_POLL_INTERVAL_MINUTES: int = 15
 
     @validator("WEBHOOK_SECRET")
     def validate_secret_length(cls, v):
