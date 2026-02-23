@@ -192,6 +192,10 @@ class OutreachStatus(BaseModel):
 
     authorized: bool = Field(..., description="Whether OAuth is set up")
     last_synced_at: Optional[datetime] = Field(None, description="Last successful sync")
-    token_expires_at: Optional[datetime] = Field(None, description="When access token expires")
-    next_scheduled_run: Optional[datetime] = Field(None, description="Next scheduled poll time")
+    token_expires_at: Optional[datetime] = Field(
+        None, description="When access token expires"
+    )
+    next_scheduled_run: Optional[datetime] = Field(
+        None, description="Next scheduled poll time"
+    )
     poll_interval_minutes: int = Field(..., description="Poll interval in minutes")

@@ -12,12 +12,8 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from api.config import settings
-from api.outreach_client import (
-    OUTREACH_AUTH_URL,
-    OUTREACH_SCOPES,
-    OUTREACH_TOKEN_URL,
-    save_tokens,
-)
+from api.outreach_client import (OUTREACH_AUTH_URL, OUTREACH_SCOPES,
+                                 OUTREACH_TOKEN_URL, save_tokens)
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +94,8 @@ async def outreach_callback(
             detail=f"Outreach token exchange failed: {e.response.text}",
         )
 
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
+
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=data["expires_in"])
     save_tokens(data["access_token"], data["refresh_token"], expires_at)
     logger.info("Outreach OAuth authorized successfully")

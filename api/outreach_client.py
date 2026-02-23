@@ -23,8 +23,8 @@ OUTREACH_AUTH_URL = "https://api.outreach.io/oauth/authorize"
 OUTREACH_SCOPES = "calls.read meetings.read"
 
 # Outreach call resource (GET /api/v2/calls)
-CALL_ANSWERED_FIELD = "answeredAt"   # null = unanswered; timestamp string = connected
-CALL_CREATED_FIELD = "createdAt"    # when the call record was created
+CALL_ANSWERED_FIELD = "answeredAt"  # null = unanswered; timestamp string = connected
+CALL_CREATED_FIELD = "createdAt"  # when the call record was created
 
 # Outreach meeting resource (GET /api/v2/meetings)
 MEETING_CREATED_FIELD = "createdAt"  # when the meeting was booked
@@ -42,10 +42,12 @@ def _invalidate_cache() -> None:
 
 # ── Token persistence ─────────────────────────────────────────────────────────
 
+
 def save_tokens(access_token: str, refresh_token: str, expires_at: datetime) -> None:
     """Upsert tokens to DB and update the in-memory cache."""
     global _token_cache
     from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     db.save_oauth_tokens("outreach", access_token, refresh_token, expires_at)
     _token_cache = {
@@ -61,6 +63,7 @@ def load_tokens() -> Optional[Dict[str, Any]]:
     if _token_cache is not None:
         return _token_cache
     from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     row = db.load_oauth_tokens("outreach")
     if row is None:
@@ -75,6 +78,7 @@ def is_authorized() -> bool:
 
 
 # ── Token refresh ─────────────────────────────────────────────────────────────
+
 
 def needs_refresh(tokens: Dict[str, Any], buffer_minutes: int = 10) -> bool:
     """Return True if the access token expires within buffer_minutes."""
@@ -127,9 +131,11 @@ def get_valid_access_token() -> Optional[str]:
 
 # ── Sync state ────────────────────────────────────────────────────────────────
 
+
 def update_last_synced_at(synced_at: datetime) -> None:
     """Update the polling high-water mark in the DB."""
     from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     db.update_last_synced_at("outreach", synced_at)
 
@@ -137,11 +143,13 @@ def update_last_synced_at(synced_at: datetime) -> None:
 def get_last_synced_at() -> Optional[datetime]:
     """Return the timestamp of the last successful sync, or None."""
     from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     return db.get_last_synced_at("outreach")
 
 
 # ── Activity fetching ─────────────────────────────────────────────────────────
+
 
 def _fetch_calls(access_token: str, since: Optional[datetime]) -> List[dict]:
     """
@@ -189,6 +197,7 @@ def _fetch_meetings(access_token: str, since: Optional[datetime]) -> List[dict]:
 
 # ── Activity mapping ──────────────────────────────────────────────────────────
 
+
 def map_calls_to_events(calls: List[dict]) -> List[Dict[str, Any]]:
     """
     Map Outreach call records to Project Rift event dicts.
@@ -204,21 +213,25 @@ def map_calls_to_events(calls: List[dict]) -> List[Dict[str, Any]]:
         timestamp = attrs.get(CALL_CREATED_FIELD)
 
         # Every call attempt = call_dial
-        events.append({
-            "source": "outreach",
-            "event_type": "call_dial",
-            "metadata": metadata,
-            "timestamp": timestamp,
-        })
+        events.append(
+            {
+                "source": "outreach",
+                "event_type": "call_dial",
+                "metadata": metadata,
+                "timestamp": timestamp,
+            }
+        )
 
         # Answered call = also call_connect (answeredAt is non-null)
         if attrs.get(CALL_ANSWERED_FIELD) is not None:
-            events.append({
-                "source": "outreach",
-                "event_type": "call_connect",
-                "metadata": metadata,
-                "timestamp": timestamp,
-            })
+            events.append(
+                {
+                    "source": "outreach",
+                    "event_type": "call_connect",
+                    "metadata": metadata,
+                    "timestamp": timestamp,
+                }
+            )
     return events
 
 
@@ -232,24 +245,28 @@ def map_meetings_to_events(meetings: List[dict]) -> List[Dict[str, Any]]:
     events = []
     for meeting in meetings:
         attrs = meeting.get("attributes", {})
-        events.append({
-            "source": "outreach",
-            "event_type": "meeting_booked",
-            "metadata": {"outreach_meeting_id": meeting.get("id")},
-            "timestamp": attrs.get(MEETING_CREATED_FIELD),
-        })
+        events.append(
+            {
+                "source": "outreach",
+                "event_type": "meeting_booked",
+                "metadata": {"outreach_meeting_id": meeting.get("id")},
+                "timestamp": attrs.get(MEETING_CREATED_FIELD),
+            }
+        )
     return events
 
 
 # ── Ingestion ─────────────────────────────────────────────────────────────────
+
 
 def _ingest_events(event_dicts: List[Dict[str, Any]]) -> int:
     """
     Submit mapped events directly to the database (bypasses HTTP).
     Returns count of non-duplicate events successfully ingested.
     """
-    from database.queries import DatabaseQueries
     from api.schemas import EventPayload
+    from database.queries import DatabaseQueries
+
     db = DatabaseQueries()
     count = 0
     for event_dict in event_dicts:
@@ -281,6 +298,7 @@ def _ingest_events(event_dicts: List[Dict[str, Any]]) -> int:
 
 
 # ── Sync entry point ──────────────────────────────────────────────────────────
+
 
 def run_sync() -> int:
     """

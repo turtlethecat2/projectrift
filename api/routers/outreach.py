@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 import api.outreach_client as outreach_client
-from api.scheduler import get_next_run_time
 from api.config import settings
+from api.scheduler import get_next_run_time
 from api.schemas import OutreachStatus, OutreachSyncResult
 
 logger = logging.getLogger(__name__)

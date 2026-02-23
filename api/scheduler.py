@@ -18,6 +18,7 @@ scheduler = AsyncIOScheduler()
 def _poll_job() -> None:
     """Scheduled job: fetch Outreach activity and ingest into Project Rift."""
     from api.outreach_client import run_sync
+
     try:
         count = run_sync()
         logger.info(f"Scheduled Outreach sync complete: {count} events ingested")
