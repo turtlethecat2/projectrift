@@ -341,5 +341,15 @@ class TestOutreachClient:
         assert events[0]["source"] == "outreach"
 
 
+class TestScheduler:
+    """Verify scheduler module exports expected functions"""
+
+    def test_scheduler_imports(self):
+        from api.scheduler import start_scheduler, stop_scheduler, get_next_run_time, scheduler
+        assert callable(start_scheduler)
+        assert callable(stop_scheduler)
+        assert callable(get_next_run_time)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
