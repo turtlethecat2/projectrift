@@ -168,3 +168,30 @@ class ErrorResponse(BaseModel):
                 "timestamp": "2026-01-04T12:00:00Z",
             }
         }
+
+
+class OutreachAuthStatus(BaseModel):
+    """Response for OAuth authorization endpoints"""
+
+    status: str = Field(..., description="authorized or error")
+    expires_at: Optional[datetime] = Field(None, description="Token expiry time")
+    message: str = Field(..., description="Human-readable status message")
+
+
+class OutreachSyncResult(BaseModel):
+    """Response for manual sync endpoint"""
+
+    status: str = Field(default="success")
+    events_ingested: int = Field(..., description="Number of new events ingested")
+    synced_at: datetime = Field(..., description="Timestamp of this sync run")
+    message: str = Field(..., description="Human-readable result message")
+
+
+class OutreachStatus(BaseModel):
+    """Response for sync status endpoint"""
+
+    authorized: bool = Field(..., description="Whether OAuth is set up")
+    last_synced_at: Optional[datetime] = Field(None, description="Last successful sync")
+    token_expires_at: Optional[datetime] = Field(None, description="When access token expires")
+    next_scheduled_run: Optional[datetime] = Field(None, description="Next scheduled poll time")
+    poll_interval_minutes: int = Field(..., description="Poll interval in minutes")

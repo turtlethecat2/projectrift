@@ -265,5 +265,36 @@ class TestOutreachConfig:
         assert settings.OUTREACH_POLL_INTERVAL_MINUTES == 15  # default
 
 
+class TestOutreachSchemas:
+    """Verify Outreach OAuth/sync Pydantic schemas"""
+
+    def test_outreach_auth_status_schema(self):
+        from api.schemas import OutreachAuthStatus
+        s = OutreachAuthStatus(status="authorized", message="ok")
+        assert s.status == "authorized"
+
+    def test_outreach_sync_result_schema(self):
+        from api.schemas import OutreachSyncResult
+        from datetime import datetime, timezone
+        s = OutreachSyncResult(
+            status="success",
+            events_ingested=5,
+            synced_at=datetime.now(timezone.utc),
+            message="ok",
+        )
+        assert s.events_ingested == 5
+
+    def test_outreach_status_schema(self):
+        from api.schemas import OutreachStatus
+        s = OutreachStatus(
+            authorized=True,
+            last_synced_at=None,
+            token_expires_at=None,
+            next_scheduled_run=None,
+            poll_interval_minutes=15,
+        )
+        assert s.authorized is True
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
