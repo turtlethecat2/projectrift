@@ -16,6 +16,7 @@ from api import __version__
 from api.config import settings
 from api.database import cleanup_database_connections
 from api.routers import auth, health, outreach, webhook
+from api.scheduler import start_scheduler, stop_scheduler
 from api.security import limiter
 
 # Configure logging
@@ -40,11 +41,13 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Database: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}")
     logger.info(f"Rate limit: {settings.RATE_LIMIT_PER_MINUTE} requests/minute")
+    start_scheduler()
 
     yield
 
     # Shutdown
     logger.info("Shutting down Project Rift API")
+    stop_scheduler()
     cleanup_database_connections()
     logger.info("Database connections closed")
 

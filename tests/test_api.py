@@ -407,5 +407,17 @@ class TestOutreachRouter:
         assert response.json()["authorized"] is False
 
 
+class TestSchedulerLifespan:
+    """Verify scheduler starts and stops with the FastAPI app"""
+
+    def test_scheduler_starts_with_app(self):
+        """Scheduler should be running when app is live"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        with TestClient(app):
+            from api.scheduler import scheduler
+            assert scheduler.running
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
