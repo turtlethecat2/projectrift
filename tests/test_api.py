@@ -206,5 +206,266 @@ class TestErrorHandling:
         assert response.status_code == 405
 
 
+class TestOAuthTokensTable:
+    """Verify oauth_tokens table exists and has correct structure"""
+
+    def test_oauth_tokens_table_exists(self):
+        """oauth_tokens table must exist after migration"""
+        from database.queries import DatabaseQueries
+
+        db = DatabaseQueries()
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'oauth_tokens'
+            ORDER BY column_name
+        """
+        )
+        columns = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        assert "access_token" in columns
+        assert "refresh_token" in columns
+        assert "expires_at" in columns
+        assert "last_synced_at" in columns
+        assert "provider" in columns
+
+    def test_save_and_load_tokens(self):
+        """save_oauth_tokens upserts and load_oauth_tokens retrieves"""
+        from datetime import datetime, timedelta, timezone
+
+        from database.queries import DatabaseQueries
+
+        db = DatabaseQueries()
+        expires = datetime.now(timezone.utc) + timedelta(hours=2)
+        db.save_oauth_tokens("outreach", "acc_test", "ref_test", expires)
+        tokens = db.load_oauth_tokens("outreach")
+        assert tokens is not None
+        assert tokens["access_token"] == "acc_test"
+        assert tokens["refresh_token"] == "ref_test"
+
+    def test_update_last_synced_at(self):
+        """update_last_synced_at sets the high-water mark"""
+        from datetime import datetime, timezone
+
+        from database.queries import DatabaseQueries
+
+        db = DatabaseQueries()
+        now = datetime.now(timezone.utc)
+        db.update_last_synced_at("outreach", now)
+        result = db.get_last_synced_at("outreach")
+        assert result is not None
+
+
+class TestOutreachConfig:
+    """Verify Outreach OAuth config fields exist"""
+
+    def test_outreach_config_fields_exist(self):
+        """Settings must have Outreach OAuth fields"""
+        from api.config import settings
+
+        assert hasattr(settings, "OUTREACH_CLIENT_ID")
+        assert hasattr(settings, "OUTREACH_CLIENT_SECRET")
+        assert hasattr(settings, "OUTREACH_REDIRECT_URI")
+        assert hasattr(settings, "OUTREACH_POLL_INTERVAL_MINUTES")
+        assert settings.OUTREACH_POLL_INTERVAL_MINUTES == 15  # default
+
+
+class TestOutreachSchemas:
+    """Verify Outreach OAuth/sync Pydantic schemas"""
+
+    def test_outreach_auth_status_schema(self):
+        from api.schemas import OutreachAuthStatus
+
+        s = OutreachAuthStatus(status="authorized", message="ok")
+        assert s.status == "authorized"
+
+    def test_outreach_sync_result_schema(self):
+        from datetime import datetime, timezone
+
+        from api.schemas import OutreachSyncResult
+
+        s = OutreachSyncResult(
+            status="success",
+            events_ingested=5,
+            synced_at=datetime.now(timezone.utc),
+            message="ok",
+        )
+        assert s.events_ingested == 5
+
+    def test_outreach_status_schema(self):
+        from api.schemas import OutreachStatus
+
+        s = OutreachStatus(
+            authorized=True,
+            last_synced_at=None,
+            token_expires_at=None,
+            next_scheduled_run=None,
+            poll_interval_minutes=15,
+        )
+        assert s.authorized is True
+
+
+class TestOutreachClient:
+    """Unit tests for outreach_client token management"""
+
+    def test_needs_refresh_when_expiring_soon(self):
+        """needs_refresh returns True when token expires within buffer window"""
+        from datetime import datetime, timedelta, timezone
+
+        from api.outreach_client import needs_refresh
+
+        tokens = {"expires_at": datetime.now(timezone.utc) + timedelta(minutes=5)}
+        assert needs_refresh(tokens, buffer_minutes=10) is True
+
+    def test_needs_refresh_when_not_expiring(self):
+        """needs_refresh returns False when token has plenty of time left"""
+        from datetime import datetime, timedelta, timezone
+
+        from api.outreach_client import needs_refresh
+
+        tokens = {"expires_at": datetime.now(timezone.utc) + timedelta(hours=1)}
+        assert needs_refresh(tokens, buffer_minutes=10) is False
+
+    def test_map_calls_to_events_unanswered(self):
+        """Unanswered call produces only call_dial event"""
+        from api.outreach_client import map_calls_to_events
+
+        calls = [
+            {
+                "id": "c1",
+                "attributes": {"answeredAt": None, "createdAt": "2026-02-22T10:00:00Z"},
+            }
+        ]
+        events = map_calls_to_events(calls)
+        assert len(events) == 1
+        assert events[0]["event_type"] == "call_dial"
+
+    def test_map_calls_to_events_answered(self):
+        """Answered call produces call_dial AND call_connect events"""
+        from api.outreach_client import map_calls_to_events
+
+        calls = [
+            {
+                "id": "c2",
+                "attributes": {
+                    "answeredAt": "2026-02-22T10:01:00Z",
+                    "createdAt": "2026-02-22T10:00:00Z",
+                },
+            }
+        ]
+        events = map_calls_to_events(calls)
+        assert len(events) == 2
+        types = {e["event_type"] for e in events}
+        assert "call_dial" in types
+        assert "call_connect" in types
+
+    def test_map_meetings_to_events(self):
+        """Meeting record produces meeting_booked event"""
+        from api.outreach_client import map_meetings_to_events
+
+        meetings = [{"id": "m1", "attributes": {"createdAt": "2026-02-22T14:00:00Z"}}]
+        events = map_meetings_to_events(meetings)
+        assert len(events) == 1
+        assert events[0]["event_type"] == "meeting_booked"
+        assert events[0]["source"] == "outreach"
+
+
+class TestScheduler:
+    """Verify scheduler module exports expected functions"""
+
+    def test_scheduler_imports(self):
+        from api.scheduler import get_next_run_time, start_scheduler, stop_scheduler
+
+        assert callable(start_scheduler)
+        assert callable(stop_scheduler)
+        assert callable(get_next_run_time)
+
+
+class TestOutreachAuthRouter:
+    """Tests for Outreach OAuth endpoints"""
+
+    def test_start_redirects_to_outreach(self):
+        """GET /auth/outreach/start redirects to Outreach authorization URL"""
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        client = TestClient(app, follow_redirects=False)
+        response = client.get("/auth/outreach/start")
+        assert response.status_code == 307
+        assert "api.outreach.io/oauth/authorize" in response.headers["location"]
+
+    def test_callback_rejects_error_param(self):
+        """GET /auth/outreach/callback?error=... returns 400"""
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        client = TestClient(app)
+        response = client.get("/auth/outreach/callback?error=access_denied")
+        assert response.status_code == 400
+        assert "access_denied" in response.json()["detail"]
+
+    def test_callback_rejects_invalid_state(self):
+        """GET /auth/outreach/callback with unknown state returns 400"""
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        client = TestClient(app)
+        response = client.get("/auth/outreach/callback?code=abc&state=invalid_state")
+        assert response.status_code == 400
+        assert "state" in response.json()["detail"].lower()
+
+
+class TestOutreachRouter:
+    """Tests for Outreach sync endpoints"""
+
+    def test_sync_returns_401_when_not_authorized(self):
+        """POST /api/v1/outreach/sync returns 401 when no tokens exist"""
+        from unittest.mock import patch
+
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        client = TestClient(app)
+        with patch("api.outreach_client.load_tokens", return_value=None):
+            response = client.post("/api/v1/outreach/sync")
+        assert response.status_code == 401
+
+    def test_status_returns_unauthorized_state(self):
+        """GET /api/v1/outreach/status returns authorized=False when no tokens"""
+        from unittest.mock import patch
+
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        client = TestClient(app)
+        with patch("api.outreach_client.load_tokens", return_value=None):
+            response = client.get("/api/v1/outreach/status")
+        assert response.status_code == 200
+        assert response.json()["authorized"] is False
+
+
+class TestSchedulerLifespan:
+    """Verify scheduler starts and stops with the FastAPI app"""
+
+    def test_scheduler_starts_with_app(self):
+        """Scheduler should be running when app is live"""
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+
+        with TestClient(app):
+            from api.scheduler import scheduler
+
+            assert scheduler.running
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

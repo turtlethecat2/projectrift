@@ -67,3 +67,6 @@ backups/
 
 # Docker
 .dockerignore
+
+# Git worktrees
+.worktrees/
