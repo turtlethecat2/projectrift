@@ -382,5 +382,30 @@ class TestOutreachAuthRouter:
         assert "state" in response.json()["detail"].lower()
 
 
+class TestOutreachRouter:
+    """Tests for Outreach sync endpoints"""
+
+    def test_sync_returns_401_when_not_authorized(self):
+        """POST /api/v1/outreach/sync returns 401 when no tokens exist"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        from unittest.mock import patch
+        client = TestClient(app)
+        with patch("api.outreach_client.load_tokens", return_value=None):
+            response = client.post("/api/v1/outreach/sync")
+        assert response.status_code == 401
+
+    def test_status_returns_unauthorized_state(self):
+        """GET /api/v1/outreach/status returns authorized=False when no tokens"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        from unittest.mock import patch
+        client = TestClient(app)
+        with patch("api.outreach_client.load_tokens", return_value=None):
+            response = client.get("/api/v1/outreach/status")
+        assert response.status_code == 200
+        assert response.json()["authorized"] is False
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
