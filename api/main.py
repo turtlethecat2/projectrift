@@ -15,7 +15,7 @@ from slowapi.errors import RateLimitExceeded
 from api import __version__
 from api.config import settings
 from api.database import cleanup_database_connections
-from api.routers import health, webhook
+from api.routers import auth, health, webhook
 from api.security import limiter
 
 # Configure logging
@@ -108,6 +108,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include routers
 app.include_router(webhook.router)
 app.include_router(health.router)
+app.include_router(auth.router)
 
 
 # Root endpoint

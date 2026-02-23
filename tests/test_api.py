@@ -351,5 +351,36 @@ class TestScheduler:
         assert callable(get_next_run_time)
 
 
+class TestOutreachAuthRouter:
+    """Tests for Outreach OAuth endpoints"""
+
+    def test_start_redirects_to_outreach(self):
+        """GET /auth/outreach/start redirects to Outreach authorization URL"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        client = TestClient(app, follow_redirects=False)
+        response = client.get("/auth/outreach/start")
+        assert response.status_code == 307
+        assert "api.outreach.io/oauth/authorize" in response.headers["location"]
+
+    def test_callback_rejects_error_param(self):
+        """GET /auth/outreach/callback?error=... returns 400"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        client = TestClient(app)
+        response = client.get("/auth/outreach/callback?error=access_denied")
+        assert response.status_code == 400
+        assert "access_denied" in response.json()["detail"]
+
+    def test_callback_rejects_invalid_state(self):
+        """GET /auth/outreach/callback with unknown state returns 400"""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        client = TestClient(app)
+        response = client.get("/auth/outreach/callback?code=abc&state=invalid_state")
+        assert response.status_code == 400
+        assert "state" in response.json()["detail"].lower()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
