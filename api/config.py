@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     OUTREACH_API_KEY: Optional[str] = None
     NOOKS_API_KEY: Optional[str] = None
 
+    # Outreach OAuth
+    OUTREACH_CLIENT_ID: Optional[str] = None
+    OUTREACH_CLIENT_SECRET: Optional[str] = None
+    OUTREACH_REDIRECT_URI: Optional[str] = None
+    OUTREACH_POLL_INTERVAL: int = 15
+
     @validator("WEBHOOK_SECRET")
     def validate_secret_length(cls, v):
         """Ensure webhook secret is at least 32 characters"""

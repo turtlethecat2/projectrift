@@ -229,6 +229,28 @@ class TestOAuthTokensTable:
         assert "last_synced_at" in columns
         assert "provider" in columns
 
+    def test_save_and_load_tokens(self):
+        """save_oauth_tokens upserts and load_oauth_tokens retrieves"""
+        from database.queries import DatabaseQueries
+        from datetime import datetime, timezone, timedelta
+        db = DatabaseQueries()
+        expires = datetime.now(timezone.utc) + timedelta(hours=2)
+        db.save_oauth_tokens("outreach", "acc_test", "ref_test", expires)
+        tokens = db.load_oauth_tokens("outreach")
+        assert tokens is not None
+        assert tokens["access_token"] == "acc_test"
+        assert tokens["refresh_token"] == "ref_test"
+
+    def test_update_last_synced_at(self):
+        """update_last_synced_at sets the high-water mark"""
+        from database.queries import DatabaseQueries
+        from datetime import datetime, timezone
+        db = DatabaseQueries()
+        now = datetime.now(timezone.utc)
+        db.update_last_synced_at("outreach", now)
+        result = db.get_last_synced_at("outreach")
+        assert result is not None
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
