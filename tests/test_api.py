@@ -206,5 +206,29 @@ class TestErrorHandling:
         assert response.status_code == 405
 
 
+class TestOAuthTokensTable:
+    """Verify oauth_tokens table exists and has correct structure"""
+
+    def test_oauth_tokens_table_exists(self):
+        """oauth_tokens table must exist after migration"""
+        from database.queries import DatabaseQueries
+        db = DatabaseQueries()
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'oauth_tokens'
+            ORDER BY column_name
+        """)
+        columns = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        assert "access_token" in columns
+        assert "refresh_token" in columns
+        assert "expires_at" in columns
+        assert "last_synced_at" in columns
+        assert "provider" in columns
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
