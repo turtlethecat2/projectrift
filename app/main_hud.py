@@ -74,7 +74,7 @@ if css_content:
 init_pygame_mixer()
 
 # Configuration
-REFRESH_INTERVAL = int(os.getenv("HUD_REFRESH_INTERVAL", 60))
+REFRESH_INTERVAL = int(os.getenv("HUD_REFRESH_INTERVAL", 7200))
 SOUND_VOLUME = float(os.getenv("SOUND_VOLUME", 0.7))
 SOUND_ENABLED = True  # Can be toggled in UI
 
@@ -282,7 +282,7 @@ def main():
             globals()["SOUND_ENABLED"] = sound_enabled
 
         refresh_rate = st.slider(
-            "Refresh Rate (seconds)", min_value=5, max_value=120, value=REFRESH_INTERVAL
+            "Refresh Rate (seconds)", min_value=5, max_value=7200, value=REFRESH_INTERVAL
         )
 
         if st.button("Test Sound - Gold Earned"):
@@ -297,12 +297,12 @@ def main():
     # Footer
     st.markdown("---")
     st.caption(
-        f"Project Rift v1.0 | Refreshing every {REFRESH_INTERVAL}s | "
+        f"Project Rift v1.0 | Refreshing every {refresh_rate}s | "
         f"Database: Connected ✅"
     )
 
     # Auto-refresh
-    time.sleep(REFRESH_INTERVAL)
+    time.sleep(refresh_rate)
     st.rerun()
 
 
