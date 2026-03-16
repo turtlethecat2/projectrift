@@ -283,6 +283,80 @@ class DatabaseQueries:
             cur.close()
             conn.close()
 
+    def save_oauth_tokens(
+        self,
+        provider: str,
+        access_token: str,
+        refresh_token: str,
+        expires_at: "datetime",
+    ) -> None:
+        conn = self.get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                INSERT INTO oauth_tokens (provider, access_token, refresh_token, expires_at, updated_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (provider) DO UPDATE SET
+                    access_token  = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    expires_at    = EXCLUDED.expires_at,
+                    updated_at    = NOW()
+                """,
+                (provider, access_token, refresh_token, expires_at),
+            )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cur.close()
+            conn.close()
+
+    def load_oauth_tokens(self, provider: str) -> Optional[Dict[str, Any]]:
+        conn = self.get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cur.execute(
+                "SELECT access_token, refresh_token, expires_at FROM oauth_tokens WHERE provider = %s",
+                (provider,),
+            )
+            row = cur.fetchone()
+            return dict(row) if row else None
+        finally:
+            cur.close()
+            conn.close()
+
+    def update_last_synced_at(self, provider: str, synced_at: "datetime") -> None:
+        conn = self.get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "UPDATE oauth_tokens SET last_synced_at = %s WHERE provider = %s",
+                (synced_at, provider),
+            )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cur.close()
+            conn.close()
+
+    def get_last_synced_at(self, provider: str) -> Optional["datetime"]:
+        conn = self.get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cur.execute(
+                "SELECT last_synced_at FROM oauth_tokens WHERE provider = %s",
+                (provider,),
+            )
+            row = cur.fetchone()
+            return row["last_synced_at"] if row else None
+        finally:
+            cur.close()
+            conn.close()
+
     @staticmethod
     def _calculate_rank(meetings_booked: int) -> str:
         """
