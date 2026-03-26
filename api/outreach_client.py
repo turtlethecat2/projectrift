@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 OUTREACH_BASE_URL = "https://api.outreach.io"
 OUTREACH_TOKEN_URL = "https://api.outreach.io/oauth/token"
 OUTREACH_AUTH_URL = "https://api.outreach.io/oauth/authorize"
-OUTREACH_SCOPES = "calls.read meetings.read"
+OUTREACH_SCOPES = "calls.read"
 
 # Outreach call resource (GET /api/v2/calls)
 CALL_ANSWERED_FIELD = "answeredAt"  # null = unanswered; timestamp string = connected

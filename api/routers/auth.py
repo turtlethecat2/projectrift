@@ -6,6 +6,7 @@ Handles the authorization redirect and token exchange callback.
 import logging
 import secrets
 from typing import Optional
+from urllib.parse import urlencode
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query
@@ -39,7 +40,7 @@ async def outreach_start():
         "scope": OUTREACH_SCOPES,
         "state": state,
     }
-    auth_url = OUTREACH_AUTH_URL + "?" + "&".join(f"{k}={v}" for k, v in params.items())
+    auth_url = OUTREACH_AUTH_URL + "?" + urlencode(params)
     return RedirectResponse(url=auth_url)
 
 
