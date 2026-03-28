@@ -80,10 +80,9 @@ async def outreach_callback(
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "client_id": settings.OUTREACH_CLIENT_ID,
-                "client_secret": settings.OUTREACH_CLIENT_SECRET,
                 "redirect_uri": settings.OUTREACH_REDIRECT_URI,
             },
+            auth=(settings.OUTREACH_CLIENT_ID, settings.OUTREACH_CLIENT_SECRET),
             timeout=10,
         )
         response.raise_for_status()

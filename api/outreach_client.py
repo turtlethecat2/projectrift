@@ -100,9 +100,8 @@ def refresh_tokens() -> Optional[Dict[str, Any]]:
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": tokens["refresh_token"],
-                "client_id": settings.OUTREACH_CLIENT_ID,
-                "client_secret": settings.OUTREACH_CLIENT_SECRET,
             },
+            auth=(settings.OUTREACH_CLIENT_ID, settings.OUTREACH_CLIENT_SECRET),
             timeout=10,
         )
         response.raise_for_status()
