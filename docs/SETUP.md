@@ -160,10 +160,71 @@ SOUND_VOLUME=0.7
 
 ---
 
+### **Step 5b: Outreach OAuth Setup**
+
+The Outreach integration auto-polls your Outreach calls and meetings and converts them into Project Rift events. Skip this step if you are not using Outreach.
+
+**1. Register an OAuth app in the Outreach developer portal:**
+   - Log in to your Outreach account
+   - Go to **Settings > Integrations > API Access** (or visit the Outreach developer portal)
+   - Create a new OAuth application
+   - Copy the **Client ID** and **Client Secret**
+
+**2. Set up ngrok (exposes your local API to the internet for the OAuth callback):**
+```bash
+# Install ngrok if you haven't already
+brew install ngrok   # macOS
+
+# Start a tunnel to your API port
+ngrok http 8000
+```
+   - Copy the HTTPS forwarding URL (e.g. `https://abc123.ngrok-free.dev`)
+   - In the Outreach OAuth app settings, set the **Redirect URI** to:
+     `https://YOUR-NGROK-URL/auth/outreach/callback`
+
+**3. Update `.env` with your Outreach credentials:**
+```bash
+OUTREACH_CLIENT_ID=your_client_id_from_step_1
+OUTREACH_CLIENT_SECRET=your_client_secret_from_step_1
+OUTREACH_REDIRECT_URI=https://YOUR-NGROK-URL/auth/outreach/callback
+```
+
+**4. Start the API and authorize:**
+```bash
+make start-api
+```
+   - Open your browser to: `http://localhost:8000/auth/outreach/start`
+   - This redirects you to Outreach to grant access
+   - After approval, you'll be redirected back and see `{"status": "authorized"}`
+   - Tokens are stored in the `oauth_tokens` database table and refresh automatically
+
+**5. Verify the integration:**
+```bash
+# Check OAuth status
+curl http://localhost:8000/api/v1/outreach/status
+
+# Trigger a manual sync
+curl -X POST http://localhost:8000/api/v1/outreach/sync
+```
+
+The scheduler automatically polls Outreach every 15 minutes (configurable via `OUTREACH_POLL_INTERVAL_MINUTES`), Monday through Friday, 8am-5pm Central Time.
+
+**Timezone note:** The polling window timezone is hardcoded to `America/Chicago` in `api/scheduler.py`. If you work in a different timezone, edit line 37 in that file (e.g. change to `America/New_York` or `America/Los_Angeles`).
+
+---
+
 ### **Step 6: Initialize Database**
 
 ```bash
-# Run the migration
+# Run the core schema migration
+make db-migrate
+
+# Run the OAuth tokens migration (required for Outreach integration)
+psql $DATABASE_URL -f database/oauth_tokens.sql
+```
+
+**Or manually:**
+```bash
 python3 -c "
 import os
 import psycopg2
@@ -175,6 +236,9 @@ conn = psycopg2.connect(os.getenv('DATABASE_URL'))
 cur = conn.cursor()
 
 with open('database/init_db.sql', 'r') as f:
+    cur.execute(f.read())
+
+with open('database/oauth_tokens.sql', 'r') as f:
     cur.execute(f.read())
 
 conn.commit()

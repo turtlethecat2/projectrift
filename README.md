@@ -387,6 +387,14 @@ All configuration is managed via `.env`. See `.env.example` for all available op
 - `DATABASE_URL` - PostgreSQL connection string
 - `WEBHOOK_SECRET` - Secret for webhook authentication (min 32 chars)
 
+**Outreach OAuth (required for Outreach auto-sync):**
+- `OUTREACH_CLIENT_ID` - OAuth app Client ID from Outreach developer portal
+- `OUTREACH_CLIENT_SECRET` - OAuth app Client Secret
+- `OUTREACH_REDIRECT_URI` - ngrok callback URL (e.g. `https://your-ngrok-url/auth/outreach/callback`)
+- `OUTREACH_POLL_INTERVAL_MINUTES` - Sync interval in minutes (default: 15, runs Mon-Fri 8am-5pm CT)
+
+See [SETUP.md](docs/SETUP.md#step-5b-outreach-oauth-setup) for detailed Outreach setup instructions. If changing companies, see [EXPORT_CHECKLIST.md](docs/EXPORT_CHECKLIST.md#changing-companies-new-outreach-instance).
+
 **Optional:**
 - `API_PORT` - API port (default: 8000)
 - `HUD_REFRESH_INTERVAL` - HUD refresh rate in seconds (default: 5)

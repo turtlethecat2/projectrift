@@ -13,6 +13,8 @@ Use this checklist when moving the project to a new environment.
 - [ ] Save your Neon database connection string (from `.env`)
 - [ ] Save your webhook secret (or plan to generate a new one)
 - [ ] Screenshot your Neon dashboard settings if needed
+- [ ] Note your Outreach OAuth Client ID and Client Secret (you'll need to re-register if changing companies)
+- [ ] Note your ngrok subdomain (if using a stable/paid ngrok URL)
 
 ### 3. Clean Up (Optional)
 ```bash
@@ -116,7 +118,7 @@ cd league-hud
 - [ ] **Activate venv**: `source venv/bin/activate`
 - [ ] **Install deps**: `pip install -r requirements.txt`
 - [ ] **Copy .env.example**: `cp .env.example .env`
-- [ ] **Edit .env**: Add your DATABASE_URL and WEBHOOK_SECRET
+- [ ] **Edit .env**: Add your DATABASE_URL, WEBHOOK_SECRET, and Outreach OAuth credentials
 - [ ] **Initialize DB**: Run migration script (see SETUP.md)
 - [ ] **Add rank images**: Copy to `app/assets/images/ranks/`
 - [ ] **Test connection**: `python3 -c "from database.queries import DatabaseQueries; print('OK')"`
@@ -228,6 +230,115 @@ ls -1 app/assets/images/ranks/*.png | wc -l  # Should show 10 if images added
 ```
 
 All checks passing? You're ready to grind! 🎮⚔️
+
+---
+
+## Changing Companies (New Outreach Instance + New Machine)
+
+When you move to a new company with a different Outreach instance, everything credential- and environment-specific needs to be re-configured. The codebase itself does not change — only configuration.
+
+### Full reconfiguration checklist
+
+#### Database (Neon PostgreSQL)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| Neon project | [neon.tech](https://neon.tech) | Create a new Neon project (or reuse existing if personal account) |
+| `DATABASE_URL` | `.env` | New connection string from Neon dashboard |
+| `DB_HOST` | `.env` | Extract host from new `DATABASE_URL` |
+| `DB_PORT` | `.env` | Usually `5432` (unchanged) |
+| `DB_NAME` | `.env` | Extract database name from new `DATABASE_URL` |
+| `DB_USER` | `.env` | Extract username from new `DATABASE_URL` |
+| `DB_PASSWORD` | `.env` | Extract password from new `DATABASE_URL` |
+| Schema initialization | Terminal | Run `make db-migrate` to create tables in the new database |
+| `oauth_tokens` table | Terminal | Run `psql $DATABASE_URL -f database/oauth_tokens.sql` (not included in `init_db.sql`) |
+
+#### API Security
+
+| Item | Where | What to do |
+|------|-------|------------|
+| `WEBHOOK_SECRET` | `.env` | Generate a new secret: `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
+
+#### Outreach OAuth
+
+| Item | Where | What to do |
+|------|-------|------------|
+| Outreach OAuth app | New company's Outreach developer portal | Register a new OAuth application. Copy the new Client ID and Client Secret. |
+| `OUTREACH_CLIENT_ID` | `.env` | Replace with the new Client ID |
+| `OUTREACH_CLIENT_SECRET` | `.env` | Replace with the new Client Secret |
+| `OUTREACH_REDIRECT_URI` | `.env` + Outreach app settings | Must match the ngrok URL exactly (see ngrok section below) |
+| OAuth tokens in database | `oauth_tokens` table | Old tokens are invalid. Re-authorize after setup, or start with a fresh database. |
+
+#### ngrok (OAuth callback tunnel)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| ngrok installation | New machine | `brew install ngrok` (macOS) |
+| ngrok auth token | Terminal | `ngrok config add-authtoken YOUR_TOKEN` (get from [ngrok dashboard](https://dashboard.ngrok.com)) |
+| ngrok tunnel | Terminal | `ngrok http 8000` — copy the HTTPS forwarding URL |
+| Redirect URI sync | `.env` + Outreach app | The ngrok URL in `OUTREACH_REDIRECT_URI` **must exactly match** the redirect URI registered in the Outreach OAuth app. If using free ngrok, the URL changes every restart — consider a paid stable subdomain. |
+
+#### Scheduler timezone (hardcoded)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| Polling timezone | `api/scheduler.py` line 37 | Hardcoded to `America/Chicago`. If your new company is in a different time zone, edit this value. The scheduler runs Mon-Fri 8am-5pm in this timezone. |
+
+#### Python environment (new machine)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| Python 3.10+ | New machine | `python3 --version` to verify |
+| Virtual environment | Project root | `python3 -m venv venv && source venv/bin/activate` |
+| Dependencies | Terminal | `pip install -r requirements.txt` |
+
+#### HUD assets (not in git)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| Rank badge images | `app/assets/images/ranks/` | Copy your 10 rank PNGs (`iron.png` through `challenger.png`). The HUD shows placeholder text without them. |
+| Sound effects | `app/assets/sounds/` | `gold_gen.mp3` and `level_up.mp3` are in the repo. If you have custom sounds, copy them over. |
+
+#### dbt (if using analytics layer)
+
+| Item | Where | What to do |
+|------|-------|------------|
+| dbt connection | `dbt_project/profiles.yml` | Reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` from `.env` — no changes needed beyond updating those env vars. |
+| dbt models | Terminal | Run `make dbt-run` after database migration to rebuild materialized tables. |
+
+#### Items often overlooked
+
+| Item | Where | What to do |
+|------|-------|------------|
+| `logs/` directory | Project root | Create `mkdir -p logs` if it doesn't exist — `make start` writes `logs/api.log` and `logs/hud.log` here. |
+| `.venv` vs `venv` | Project root | The `.gitignore` ignores `venv/` but not `.venv/`. Either name works, just be consistent. |
+| Old event data | `raw_events` table | If reusing a database from a previous company, consider wiping old data: `make db-reset` |
+| Nooks API key | `.env` | If your new company uses Nooks, update `NOOKS_API_KEY`. |
+
+### Step-by-step (condensed)
+
+1. **Clone the repo** on the new machine
+2. **Create venv and install deps**: `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`
+3. **Create `.env`**: `cp .env.example .env` and fill in new Neon + Outreach credentials
+4. **Initialize the database**: `make db-migrate && psql $DATABASE_URL -f database/oauth_tokens.sql`
+5. **Copy rank images** to `app/assets/images/ranks/`
+6. **Start ngrok**: `ngrok http 8000` — copy HTTPS URL
+7. **Register Outreach OAuth app** in the new company's portal, set redirect URI to ngrok URL
+8. **Update `.env`** with Outreach Client ID, Secret, and redirect URI
+9. **Start the API**: `make start-api`
+10. **Authorize Outreach**: Open `http://localhost:8000/auth/outreach/start` in your browser
+11. **Verify**: `curl http://localhost:8000/api/v1/outreach/status`
+12. **Start the HUD**: `make start` (or `make start-hud` if API is already running)
+
+### What stays the same
+
+- All application code (no changes needed)
+- Gamification rules and rank thresholds
+- HUD frontend layout and styling
+- dbt model definitions
+- Sound effect files (in git)
+- Docker Compose config (reads from `.env`)
+- Makefile commands
 
 ---
 
