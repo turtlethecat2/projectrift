@@ -157,7 +157,8 @@ def _fetch_calls(access_token: str, since: Optional[datetime]) -> List[dict]:
     """
     params: Dict[str, Any] = {"sort": CALL_CREATED_FIELD, "page[size]": 100}
     if since:
-        params[f"filter[{CALL_CREATED_FIELD}][gte]"] = since.isoformat()
+        since_str = since.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        params[f"filter[{CALL_CREATED_FIELD}]"] = f"{since_str}..inf"
     try:
         response = httpx.get(
             f"{OUTREACH_BASE_URL}/api/v2/calls",
@@ -179,7 +180,8 @@ def _fetch_meetings(access_token: str, since: Optional[datetime]) -> List[dict]:
     """
     params: Dict[str, Any] = {"sort": MEETING_CREATED_FIELD, "page[size]": 100}
     if since:
-        params[f"filter[{MEETING_CREATED_FIELD}][gte]"] = since.isoformat()
+        since_str = since.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        params[f"filter[{MEETING_CREATED_FIELD}]"] = f"{since_str}..inf"
     try:
         response = httpx.get(
             f"{OUTREACH_BASE_URL}/api/v2/meetings",
