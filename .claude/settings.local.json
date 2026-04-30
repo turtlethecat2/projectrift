@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(cat:*)",
+      "Bash(brew install:*)",
+      "Bash(curl -s http://localhost:8000/api/v1/health)",
+      "Bash(curl -s http://localhost:8000/api/v1/outreach/status)",
+      "Bash(source .env)",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/outreach/sync -H \"X-API-KEY: $WEBHOOK_SECRET\")",
+      "WebFetch(domain:developers.outreach.io)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(NEON_URL=\"postgresql://neondb_owner:npg_RH4xBXCi9KZp@ep-purple-lab-a4hdk183-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require\")",
+      "Bash(psql \"$NEON_URL\" -c \"SELECT * FROM outreach_tokens LIMIT 5;\")",
+      "Bash(psql \"$NEON_URL\" -c \"\\\\dt\")"
+    ]
+  }
+}
