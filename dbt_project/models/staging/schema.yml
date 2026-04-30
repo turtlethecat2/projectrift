@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: public
+    schema: public
+    tables:
+      - name: raw_events
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: source
+            tests: [not_null]
+          - name: event_type
+            tests: [not_null]
+          - name: gold_value
+            tests: [not_null]
+          - name: xp_value
+            tests: [not_null]
+          - name: created_at
+            tests: [not_null]
+
+models:
+  - name: stg_sales_events
+    columns:
+      - name: event_id
+        tests: [unique, not_null]

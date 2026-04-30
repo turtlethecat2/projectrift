@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: fct_daily_performance
+    columns:
+      - name: event_date
+        tests: [not_null]
+
+  - name: dim_user_stats
+    columns:
+      - name: lifetime_gold
+        tests: [not_null]
